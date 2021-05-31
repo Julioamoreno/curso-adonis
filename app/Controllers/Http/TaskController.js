@@ -1,5 +1,8 @@
 'use strict'
 
+/** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
+const Task = use('App/Models/Task')
+
 /** @typedef {import('@adonisjs/framework/src/Request')} Request */
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
@@ -13,23 +16,19 @@ class TaskController {
    * GET tasks
    *
    * @param {object} ctx
+   * @param {Request} ctx.params
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index ({ request, response, view }) {
-  }
-
-  /**
-   * Render a form to be used for creating a new task.
-   * GET tasks/create
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async create ({ request, response, view }) {
+  async index ({ params, request, response, view }) {
+    const tasks = await Task.query()
+      .where(
+        'project_id', params.projects_id
+      )
+      .with('user')
+      .fetch()
+    return tasks
   }
 
   /**
@@ -39,8 +38,13 @@ class TaskController {
    * @param {object} ctx
    * @param {Request} ctx.request
    * @param {Response} ctx.response
+   * @param {Response} ctx.params
    */
-  async store ({ request, response }) {
+  async store ({ request, response, params }) {
+    const data = request.only(['user_id', 'title', 'description', 'due_date', 'file_id'])
+
+    const task = await Task.create({ ...data, project_id: params.projects_id })
+    return response.status(200).send(task)
   }
 
   /**
@@ -48,23 +52,14 @@ class TaskController {
    * GET tasks/:id
    *
    * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
+   * @param {Request} ctx.params
    */
-  async show ({ params, request, response, view }) {
-  }
+  async show ({ params }) {
+    const task = await Task.findOrFail(params.id)
 
-  /**
-   * Render a form to update an existing task.
-   * GET tasks/:id/edit
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async edit ({ params, request, response, view }) {
+    await task.load('user')
+
+    return task
   }
 
   /**
@@ -72,10 +67,16 @@ class TaskController {
    * PUT or PATCH tasks/:id
    *
    * @param {object} ctx
+   * @param {Response} ctx.params
    * @param {Request} ctx.request
-   * @param {Response} ctx.response
    */
-  async update ({ params, request, response }) {
+  async update ({ params, request }) {
+    const task = await Task.findOrFail(params.id)
+    const data = request.only(['user_id', 'title', 'description', 'due_date', 'file_id'])
+
+    task.merge(data)
+    await task.save()
+    return task
   }
 
   /**
@@ -83,10 +84,12 @@ class TaskController {
    * DELETE tasks/:id
    *
    * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
+   * @param {Request} ctx.params
    */
-  async destroy ({ params, request, response }) {
+  async destroy ({ params }) {
+    const task = await Task.findOrFail(params.id)
+
+    await task.delete()
   }
 }
 

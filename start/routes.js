@@ -12,4 +12,5 @@ Route.group(() => {
   Route.post('passwords', 'ForgotPasswordController.store')
   Route.put('passwords', 'ForgotPasswordController.update')
   Route.resource('projects', 'ProjectController').apiOnly()
+  Route.resource('projects.tasks', 'TaskController').apiOnly()
 }).middleware(['auth'])
