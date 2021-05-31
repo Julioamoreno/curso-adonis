@@ -1,0 +1,9 @@
+{
+    "above": "The {{field}} should be above {{argument.0}}.",
+    "accepted": "The {{field}} should have been accepted.",
+    "date": "The {{field}} should be a valid date.",
+    "date_format": "The {{field}} should be a valid date according to given format {{argument.0}}.",
+    "confirmed": "The {{field}} confirmation does not match.",
+    "required": "The {{field}} is required.",
+    "unique": "The {{field}} has already been taken by someone else."
+}
