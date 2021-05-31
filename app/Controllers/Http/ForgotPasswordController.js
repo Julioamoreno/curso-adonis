@@ -2,6 +2,7 @@
 const crypto = require('crypto')
 const User = use('App/Models/User')
 const Mail = use('Mail')
+const moment = require('moment')
 
 class ForgotPasswordController {
   async store ({ request, response }) {
@@ -24,6 +25,28 @@ class ForgotPasswordController {
         })
     } catch (err) {
       return response.status(err.status).send({ error: { message: 'Esse email não existe' } })
+    }
+  }
+
+  async update ({ request, response }) {
+    try {
+      const { token, password } = request.all()
+      const user = await User.findByOrFail('token', token)
+
+      const tokenExpired = moment().subtract('2', 'd').isAfter(user.token_created_at)
+
+      if (tokenExpired) {
+        return response.state(401).send({ error: { message: 'O token de recuperação está expirado ' } })
+      }
+
+      user.token = null
+      user.token_created_at = null
+      user.password = password
+
+      await user.save()
+      response.send({ message: 'Senha alterada com sucesso' })
+    } catch (err) {
+      return response.status(err.status).send({ error: { message: 'Algo deu errado ao resetar sua senha' } })
     }
   }
 }
